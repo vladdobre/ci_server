@@ -1,4 +1,7 @@
-# ci_server
+# Assignment 2: Continuous Integration (DD2480)
+Repository for DD2480 Continuous Integration assignment - group 28.
+
+## Description
 
 ## Starting the Server
 In order to make the server visible online we need to do the following:
@@ -10,3 +13,16 @@ Note 2: If the domain is changed for any reason, make sure to update the url in 
 
 2) Add the jars found in the folder with the same name to the dependencies of the project.
 3) Compile the project
+
+## Statement of contributions
+#### Ilias Lachiri (lachiri)
+
+#### Johann Biörck (jbiorck)
+
+#### Kristian Fatohi (kfatohi)
+
+#### Max Israelsson (maxisr)
+
+#### Vlad Dobre (dobre)
+
+## Team (Essence)
