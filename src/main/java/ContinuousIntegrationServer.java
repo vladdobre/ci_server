@@ -1,9 +1,9 @@
-package src;
+// No package declaration here
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
- 
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -12,21 +12,25 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+//import org.eclipse.jetty.util.Callback;
 
-/** 
+/**
  Skeleton of a ContinuousIntegrationServer which acts as webhook
  See the Jetty documentation for API documentation of those classes.
 */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
+
     @Override
     public void handle(String target,
                        Request baseRequest,
                        HttpServletRequest request,
-                       HttpServletResponse response) 
+                       HttpServletResponse response)
         throws IOException{
         response.setContentType("text/html;charset=utf-8");
         response.setStatus(HttpServletResponse.SC_OK);
@@ -50,7 +54,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         String payload = payloadBuilder.toString();
 
 
-        //For the Issue #2, we need to implement the  Webhook listener 
+        //For the Issue #2, we need to implement the  Webhook listener
         // so this part get listened to the push and pull_request events
         // and print the last commit in a push of the action in case of pull_request.
         if ("push".equals(eventType)) {
@@ -86,7 +90,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
     /**
      * This function handles the push event from the webhook and prints the latest commit message.
-     * 
+     *
      * @param payload
      */
     private void handlePushEvent(String payload) {
@@ -102,7 +106,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
     /**
      * This function handles the pull request event from the webhook and prints the action.
-     * 
+     *
      * @param payload
      */
     private void handlePullRequestEvent(String payload) {
@@ -113,13 +117,15 @@ public class ContinuousIntegrationServer extends AbstractHandler
         System.out.println("Pull request action: " + action);
     }
 
- 
+
     // used to start the CI server in command line
    public static void main(String[] args) throws Exception
     {
         Server server = new Server(8080);
-        server.setHandler(new ContinuousIntegrationServer()); 
+        server.setHandler(new ContinuousIntegrationServer());
         server.start();
         server.join();
     }
+
+
 }
