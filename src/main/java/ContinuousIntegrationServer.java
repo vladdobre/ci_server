@@ -9,6 +9,11 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.io.File; 
+
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -17,7 +22,7 @@ import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-//import org.eclipse.jetty.util.Callback;
+// import org.eclipse.jetty.util.Callback;
 
 /**
  Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -87,6 +92,95 @@ public class ContinuousIntegrationServer extends AbstractHandler
         return gson.fromJson(request, mapType);
     }
 
+    /**
+     * This function extracts the latest commit message from the push event payload.
+     * It uses the Gson library to parse the JSON payload and extract the commit message.
+     * If no commits are found, it returns null.
+     * 
+     * @param payload - The JSON payload from the push event
+     * @return The latest commit message
+     */
+    public String getLatestCommitMessageFromPush(String payload) {
+        Gson gson = new Gson();
+        Map<String, Object> payloadMap = gson.fromJson(payload, new TypeToken<HashMap<String, Object>>(){}.getType());
+        List<Map<String, Object>> commits = (List<Map<String, Object>>) payloadMap.get("commits");
+        if (commits != null && !commits.isEmpty()) {
+            Map<String, Object> latestCommit = commits.get(commits.size() - 1);
+            return (String) latestCommit.get("message");
+        }
+        return null; // Return null if no commits found
+    }
+
+    /**
+     * Clones a Git repository to a specified directory.
+     * The repository is cloned to a unique directory name generated from the commit hash and the current time.
+     * 
+     * @param repoUrl the URL of the repository to clone.
+     * @param baseCloneDirPath the base path to the directory where the repository will be cloned.
+     * @param commitHash the hash of the commit to clone.
+     */
+    public void cloneRepository(String repoUrl, String baseCloneDirPath, String commitHash) {
+        // Generate a unique directory name
+        String uniqueDirName = commitHash + "_" + System.currentTimeMillis();
+        File cloneDir = new File(baseCloneDirPath, uniqueDirName);
+        if (!cloneDir.mkdirs()) {
+            System.err.println("Failed to create directory for clone: " + cloneDir.getPath());
+            return;
+        }
+        
+        try {
+            System.out.println("Cloning repository from " + repoUrl + " to " + cloneDir.getPath());
+            Git.cloneRepository()
+                .setURI(repoUrl)
+                .setDirectory(cloneDir)
+                .call();
+            System.out.println("Repository cloned successfully.");
+        } catch (GitAPIException e) {
+            System.err.println("Error cloning repository: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+
+     /**
+     * Extracts the repository clone URL from the webhook payload.
+     * This function uses the Gson library to parse the JSON payload and extract the repository URL.
+     * If the repository URL cannot be extracted, it returns null.
+     *
+     * @param payload the JSON payload received from the webhook.
+     * @return the clone URL of the repository.
+     */
+    public String extractRepositoryUrl(String payload) {
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<String, Object>>(){}.getType();
+        Map<String, Object> payloadMap = gson.fromJson(payload, type);
+
+        Map<String, Object> repository = (Map<String, Object>) payloadMap.get("repository");
+        if (repository != null) {
+            return (String) repository.get("clone_url");
+        }
+        return null; // [TODO]: throw an exception if the URL cannot be extracted
+    }
+
+    /**
+     * Extracts the latest commit hash from the push event payload.
+     *
+     * @param payload the JSON payload received from the webhook.
+     * @return the commit hash of the latest commit.
+     */
+    private String getLatestCommitHashFromPush(String payload) {
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<String, Object>>(){}.getType();
+        Map<String, Object> payloadMap = gson.fromJson(payload, type);
+        
+        List<Map<String, Object>> commits = (List<Map<String, Object>>) payloadMap.get("commits");
+        if (commits != null && !commits.isEmpty()) {
+            // The first commit in the list is the latest commit
+            Map<String, Object> latestCommit = commits.get(0); 
+            return (String) latestCommit.get("id");
+        }
+        return null; 
+    }
 
     /**
      * This function handles the push event from the webhook and prints the latest commit message.
@@ -94,14 +188,20 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @param payload
      */
     private void handlePushEvent(String payload) {
-        // Parse the payload to extract push event information
-        Gson gson = new Gson();
-        Map payloadMap = gson.fromJson(payload, Map.class);
-        List commits = (List) payloadMap.get("commits");
-        if (!commits.isEmpty()) {
-            Map latestCommit = (Map) commits.get(commits.size() - 1);
-            System.out.println("Latest commit message: " + latestCommit.get("message"));
+        String latestCommitMessage = getLatestCommitMessageFromPush(payload);
+        if (latestCommitMessage != null) {
+            System.out.println("Latest commit message: " + latestCommitMessage);
         }
+
+        String repoUrl = extractRepositoryUrl(payload);
+
+        String baseDirPath = System.getProperty("user.dir");
+        String repoDir = "/repo_bdd";
+        String cloneDirPath = baseDirPath + repoDir;
+        
+        String commitHash = getLatestCommitHashFromPush(payload);
+
+        cloneRepository(repoUrl, cloneDirPath, commitHash);
     }
 
     /**
@@ -118,10 +218,11 @@ public class ContinuousIntegrationServer extends AbstractHandler
     }
 
 
+
     // used to start the CI server in command line
    public static void main(String[] args) throws Exception
     {
-        Server server = new Server(8080);
+        Server server = new Server(8028);
         server.setHandler(new ContinuousIntegrationServer());
         server.start();
         server.join();
