@@ -3,6 +3,28 @@ Repository for DD2480 Continuous Integration assignment - group 28.
 
 ## Description
 
+## Running the project
+In order to Run the project, you need to have the following installed:
+1) Java 17
+2) Maven
+3) Ngrok (Check the section "Starting the Server" for more information)
+
+Once you have the above installed, you can run the project by doing the following:
+
+1) Clone the repository
+2) Open the project in your favorite IDE
+3) Run the following command in the terminal to compile the project:
+```
+mvn clean install
+```
+4) Run the following command to start the server:
+```
+mvn exec:java
+```
+5) The server should now be running on localhost:8080
+
+## Running the tests
+
 ## Starting the Server
 In order to make the server visible online we need to do the following:
 1) Run ngrok.exe and use the following command "ngrok http --domain thrush-engaging-monkfish.ngrok-free.app 8080"
