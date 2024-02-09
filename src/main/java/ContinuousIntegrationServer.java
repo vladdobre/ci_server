@@ -71,7 +71,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
             System.out.println("Unhandled event type: " + eventType);
         }
 
-        // System.out.println("Payload: ");
+        // System.out.println("Payload: " + payload);
         // Map<String, Object> payload = request_to_map(request.getParameter("payload"));
         // for(String key : payload.keySet()){
         //     System.out.println(payload.get(key));
@@ -148,7 +148,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
     public void compileMavenProject(String projectDirPath, String uniqueDirName) {
         try {
             // Define the command to run mvn clean install
-            // [TODO]: Update the command to use the correct path to the mvn executable
+            // [IMPORTANT]: Update the command to use the correct path to the mvn executable
             List<String> command = Arrays.asList("C:\\Program Files\\Maven\\apache-maven-3.9.6\\bin\\mvn.cmd", "clean", "install");
             
             // Create a process builder to execute the command in the project directory
@@ -239,7 +239,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         // Create a unique directory name using the commit hash and the current time
         String uniqueDirName = commitHash + "_" + System.currentTimeMillis();
         cloneRepository(repoUrl, cloneDirPath, uniqueDirName);
-        compileMavenProject(cloneDirPath, uniqueDirName); // [TODO]: Uncomment this line to compile the Maven project
+        compileMavenProject(cloneDirPath, uniqueDirName);
     }
 
     /**
@@ -255,11 +255,12 @@ public class ContinuousIntegrationServer extends AbstractHandler
         System.out.println("Pull request action: " + action);
     }
 
-
-
-    // used to start the CI server in command line
-   public static void main(String[] args) throws Exception
-    {
+    /**
+     * This function starts the CI server on port 8028.
+     * @param args - Command line arguments
+     * @throws Exception 
+     */
+   public static void main(String[] args) throws Exception {
         Server server = new Server(8028);
         server.setHandler(new ContinuousIntegrationServer());
         server.start();
