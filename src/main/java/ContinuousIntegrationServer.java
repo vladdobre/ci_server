@@ -143,6 +143,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @param repoUrl the URL of the repository to clone.
      * @param baseCloneDirPath the base path to the directory where the repository will be cloned.
      * @param uniqueDirName the hash of the commit to clone.
+     * @return void
+     * @throws GitAPIException
      */
     public void cloneRepository(String repoUrl, String baseCloneDirPath, String uniqueDirName) {
         File cloneDir = new File(baseCloneDirPath, uniqueDirName);
@@ -168,6 +170,10 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * Compiles the Maven project and runs tests.
      *
      * @param projectDirPath the path to the directory where the Maven project is located.
+     * @param uniqueDirName the unique directory name generated from the commit hash and the current time.
+     * @return void
+     * @throws IOException
+     * @throws InterruptedException
      */
     public void compileMavenProject(String projectDirPath, String uniqueDirName) {
         int exitCode = -1; // Default exit code for failure
@@ -188,7 +194,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
             // Wait for the process to complete
             exitCode = process.waitFor();
-            
+
             // Check the exit code to determine if the build was successful
             if (exitCode == 0) {
                 System.out.println("Maven project compiled successfully.");
@@ -204,6 +210,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
             
             if (exitCode != 0) {
                 // If compilation failed, send email notification
+
+                //TODO: Replace with the email of the committer from payload!
                 String toEmail = "maxism29.mi@gmail.com";
                 String subject = "Build Result Notification";
                 String messageBody = "The build failed";
@@ -274,6 +282,50 @@ public class ContinuousIntegrationServer extends AbstractHandler
             e.printStackTrace();
         }   
     }
+
+    /**
+     * Removes the cloned repository from the file system.
+     * This function deletes the cloned repository directory and all its contents, except for the build summary file.
+     * 
+     * @param cloneDirPath the path to the directory where the repository was cloned.
+     * @param uniqueDirName the unique directory name generated from the commit hash and the current time.
+     * @return void
+     */
+    public void removeClonedRepository(String cloneDirPath, String uniqueDirName) {
+        File clonedRepo = new File(cloneDirPath, uniqueDirName);
+        if (clonedRepo.exists() && clonedRepo.isDirectory()) {
+            System.out.println("Deleting cloned repository: " + clonedRepo.getPath());
+            File[] files = clonedRepo.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (!file.getName().equals("build_summary.json")) {
+                        deleteFile(file);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Deletes a file or directory from the file system.
+     * This function is used to delete the cloned repository directory and its contents.
+     * 
+     * @param file the file or directory to delete.
+     * @return void
+     */
+    private void deleteFile(File file) {
+        if (file.isDirectory()) {
+            File[] contents = file.listFiles();
+            if (contents != null) {
+                for (File f : contents) {
+                    deleteFile(f);
+                }
+            }
+        }
+        if (!file.delete()) {
+            System.err.println("Failed to delete file: " + file.getPath());
+        }
+    }
     
      /**
      * Extracts the repository clone URL from the webhook payload.
@@ -338,6 +390,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         String uniqueDirName = commitHash + "_" + System.currentTimeMillis();
         cloneRepository(repoUrl, cloneDirPath, uniqueDirName);
         compileMavenProject(cloneDirPath, uniqueDirName);
+        removeClonedRepository(cloneDirPath, uniqueDirName);
     }
 
     /**
