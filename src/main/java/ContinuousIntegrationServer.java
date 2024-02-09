@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.io.File; 
 
@@ -140,6 +141,42 @@ public class ContinuousIntegrationServer extends AbstractHandler
             e.printStackTrace();
         }
     }
+
+    /**
+     * Compiles the Maven project and runs tests.
+     *
+     * @param projectDirPath the path to the directory where the Maven project is located.
+     */
+    public void compileMavenProject(String projectDirPath) {
+        try {
+            // Define the command to run mvn clean install
+            // [TODO]: Update the command to use the correct path to the mvn executable
+            List<String> command = Arrays.asList("C:\\Program Files\\Maven\\apache-maven-3.9.6\\bin\\mvn.cmd", "clean", "install");
+            
+            // Create a process builder to execute the command in the project directory
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.directory(new File(projectDirPath)); // Set the working directory
+            
+            // Inherit IO to display output in the console
+            processBuilder.inheritIO();
+            
+            // Start the process
+            Process process = processBuilder.start();
+            
+            // Wait for the process to complete
+            int exitCode = process.waitFor();
+            
+            // Check the exit code to determine if the build was successful
+            if (exitCode == 0) {
+                System.out.println("Maven project compiled successfully.");
+            } else {
+                System.err.println("Maven project compilation failed.");
+            }
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Error compiling Maven project: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }    
     
 
      /**
@@ -196,12 +233,13 @@ public class ContinuousIntegrationServer extends AbstractHandler
         String repoUrl = extractRepositoryUrl(payload);
 
         String baseDirPath = System.getProperty("user.dir");
-        String repoDir = "/repo_bdd";
+        String repoDir = "/repo_bdd"; //maybe a slight change in path is needed as we want ot be inside the repo we just cloned this folder holds all recent cloned copies
         String cloneDirPath = baseDirPath + repoDir;
         
         String commitHash = getLatestCommitHashFromPush(payload);
 
         cloneRepository(repoUrl, cloneDirPath, commitHash);
+        // compileMavenProject(cloneDirPath); // [TODO]: Uncomment this line to compile the Maven project
     }
 
     /**
