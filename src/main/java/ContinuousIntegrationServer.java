@@ -41,7 +41,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         response.setStatus(HttpServletResponse.SC_OK);
         baseRequest.setHandled(true);
 
-        System.out.println(target);
+        System.out.println("Target: " + target);
 
         // Determine the event type from the X-GitHub-Event header
         String eventType = request.getHeader("X-GitHub-Event");
