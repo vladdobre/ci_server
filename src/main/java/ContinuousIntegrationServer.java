@@ -9,9 +9,13 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.io.File; 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+
 import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Transport;
@@ -23,6 +27,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import org.eclipse.jetty.server.Response;
@@ -91,7 +96,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
             System.out.println("Unhandled event type: " + eventType);
         }
 
-        System.out.println("Payload: " + payload);
+        // System.out.println("Payload: " + payload);
         // Map<String, Object> payload = request_to_map(request.getParameter("payload"));
         // for(String key : payload.keySet()){
         //     System.out.println(payload.get(key));
@@ -165,10 +170,11 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @param projectDirPath the path to the directory where the Maven project is located.
      */
     public void compileMavenProject(String projectDirPath, String uniqueDirName) {
+        int exitCode = -1; // Default exit code for failure
         try {
             // Define the command to run mvn clean install
             // [IMPORTANT]: Update the command to use the correct path to the mvn executable
-            List<String> command = Arrays.asList("C:\\Program Files\\Maven\\apache-maven-3.9.6\\bin\\mvn.cmd", "clean", "install");
+            List<String> command = Arrays.asList("C:\\Program Files\\Maven\\apache-maven-3.9.6\\bin\\mvn.cmd", "clean", "install",">", "mavenOutput.txt");
             
             // Create a process builder to execute the command in the project directory
             ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -179,26 +185,95 @@ public class ContinuousIntegrationServer extends AbstractHandler
             
             // Start the process
             Process process = processBuilder.start();
-            
+
             // Wait for the process to complete
-            int exitCode = process.waitFor();
+            exitCode = process.waitFor();
             
             // Check the exit code to determine if the build was successful
             if (exitCode == 0) {
                 System.out.println("Maven project compiled successfully.");
             } else {
                 System.err.println("Maven project compilation failed.");
-
-                String toEmail = "maxism29.mi@gmail.com";
-                String subject = "Build Result";
-                String messageBody = "The build failed";
-                sendBuildResultEmail(toEmail, subject, messageBody);
             }
         } catch (IOException | InterruptedException e) {
             System.err.println("Error compiling Maven project: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            // Generate and write JSON summary file
+            generateSummaryFile(projectDirPath, uniqueDirName);
+            
+            if (exitCode != 0) {
+                // If compilation failed, send email notification
+                String toEmail = "maxism29.mi@gmail.com";
+                String subject = "Build Result Notification";
+                String messageBody = "The build failed";
+                sendBuildResultEmail(toEmail, subject, messageBody);
+            }
         }
-    }    
+    } 
+    
+    /**
+     * Generates a summary file for the build process.
+     * The summary file contains information about the build status, compilation errors, and total time.
+     * 
+     * @param projectDirPath the path to the directory where the Maven project is located.
+     * @param uniqueDirName the unique directory name generated from the commit hash and the current time.
+     * @return void
+     * @throws IOException
+     */
+    private void generateSummaryFile(String projectDirPath, String uniqueDirName) {
+        // Prepare summary data
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("uniqueDirName", uniqueDirName);
+
+        // Read the Maven output file and extract relevant information
+        String mavenOutputFile = projectDirPath + File.separator + uniqueDirName + File.separator + "mavenOutput.txt";
+        List<String> compilationErrors = new ArrayList<>();
+        List<String> infoLines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(mavenOutputFile))) {
+            String line;
+            boolean errorEncountered = false;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("[ERROR]")) {
+                    errorEncountered = true;
+                    compilationErrors.add(line);
+                } else if (line.contains("[INFO]")) {
+                    infoLines.add(line);
+                }
+                if (line.startsWith("[INFO] Total time:")) {
+                    String[] parts = line.split(": ");
+                    if (parts.length == 2) {
+                        String totalTime = parts[1].trim();
+                        summary.put("totalTime", totalTime);
+                    }
+                }
+            }
+            // If errors were encountered, mark the summary as a failure
+            if (errorEncountered) {
+                summary.put("buildStatus", "FAILURE");
+            } else {
+                summary.put("buildStatus", "SUCCESS");
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading Maven output file: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // Add compilation errors and info lines to the summary
+        summary.put("compilationErrors", compilationErrors);
+        summary.put("infoLines", infoLines);
+
+        // Write summary to JSON file
+        String summaryFile = projectDirPath + File.separator + uniqueDirName + File.separator + "build_summary.json";
+        try (FileWriter fileWriter = new FileWriter(summaryFile)) {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            gson.toJson(summary, fileWriter);
+            System.out.println("Build summary file written to: " + summaryFile);
+        } catch (IOException e) {
+            System.err.println("Error writing build summary file: " + e.getMessage());
+            e.printStackTrace();
+        }   
+    }
     
      /**
      * Extracts the repository clone URL from the webhook payload.
