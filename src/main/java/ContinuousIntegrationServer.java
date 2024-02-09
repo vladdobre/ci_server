@@ -33,6 +33,20 @@ public class ContinuousIntegrationServer extends AbstractHandler
 {
 
     @Override
+    /**
+     * This function handles the incoming webhook requests from GitHub.
+     * It reads the X-GitHub-Event header to determine the event type and
+     * reads the JSON payload to extract the necessary information.
+     * 
+     * @param target - The target of the request
+     * @param baseRequest - The original unwrapped request object
+     * @param request - The request either as the Request object or a wrapper of that request
+     * @param response - The response as the Response object or a wrapper of that request
+     * @throws IOException - If an input or output exception occurs
+     * @throws ServletException - If a servlet exception occurs
+     * 
+     * @return void
+     */
     public void handle(String target,
                        Request baseRequest,
                        HttpServletRequest request,
