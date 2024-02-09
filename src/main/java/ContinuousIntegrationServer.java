@@ -236,7 +236,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
         // Read the Maven output file and extract relevant information
         String mavenOutputFile = projectDirPath + File.separator + uniqueDirName + File.separator + "mavenOutput.txt";
-        List<String> compilationErrors = new ArrayList<>();
+        List<String> errorLines = new ArrayList<>();
         List<String> infoLines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(mavenOutputFile))) {
             String line;
@@ -244,7 +244,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
             while ((line = reader.readLine()) != null) {
                 if (line.contains("[ERROR]")) {
                     errorEncountered = true;
-                    compilationErrors.add(line);
+                    errorLines.add(line);
                 } else if (line.contains("[INFO]")) {
                     infoLines.add(line);
                 }
@@ -254,6 +254,10 @@ public class ContinuousIntegrationServer extends AbstractHandler
                         String totalTime = parts[1].trim();
                         summary.put("totalTime", totalTime);
                     }
+                }
+                if (line.startsWith("[INFO] Finished at:")) {
+                    String finishedAt = line.substring("[INFO] Finished at:".length()).trim();
+                    summary.put("finishedAt", finishedAt);
                 }
             }
             // If errors were encountered, mark the summary as a failure
@@ -268,7 +272,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
 
         // Add compilation errors and info lines to the summary
-        summary.put("compilationErrors", compilationErrors);
+        summary.put("errorLines", errorLines);
         summary.put("infoLines", infoLines);
 
         // Write summary to JSON file
@@ -390,7 +394,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         String uniqueDirName = commitHash + "_" + System.currentTimeMillis();
         cloneRepository(repoUrl, cloneDirPath, uniqueDirName);
         compileMavenProject(cloneDirPath, uniqueDirName);
-        removeClonedRepository(cloneDirPath, uniqueDirName);
+        // removeClonedRepository(cloneDirPath, uniqueDirName);
     }
 
     /**
