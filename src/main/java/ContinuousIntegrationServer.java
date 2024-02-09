@@ -118,11 +118,9 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * 
      * @param repoUrl the URL of the repository to clone.
      * @param baseCloneDirPath the base path to the directory where the repository will be cloned.
-     * @param commitHash the hash of the commit to clone.
+     * @param uniqueDirName the hash of the commit to clone.
      */
-    public void cloneRepository(String repoUrl, String baseCloneDirPath, String commitHash) {
-        // Generate a unique directory name
-        String uniqueDirName = commitHash + "_" + System.currentTimeMillis();
+    public void cloneRepository(String repoUrl, String baseCloneDirPath, String uniqueDirName) {
         File cloneDir = new File(baseCloneDirPath, uniqueDirName);
         if (!cloneDir.mkdirs()) {
             System.err.println("Failed to create directory for clone: " + cloneDir.getPath());
@@ -147,7 +145,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
      *
      * @param projectDirPath the path to the directory where the Maven project is located.
      */
-    public void compileMavenProject(String projectDirPath) {
+    public void compileMavenProject(String projectDirPath, String uniqueDirName) {
         try {
             // Define the command to run mvn clean install
             // [TODO]: Update the command to use the correct path to the mvn executable
@@ -155,7 +153,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
             
             // Create a process builder to execute the command in the project directory
             ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.directory(new File(projectDirPath)); // Set the working directory
+            processBuilder.directory(new File(projectDirPath, uniqueDirName)); // Set the working directory
             
             // Inherit IO to display output in the console
             processBuilder.inheritIO();
@@ -238,8 +236,10 @@ public class ContinuousIntegrationServer extends AbstractHandler
         
         String commitHash = getLatestCommitHashFromPush(payload);
 
-        cloneRepository(repoUrl, cloneDirPath, commitHash);
-        // compileMavenProject(cloneDirPath); // [TODO]: Uncomment this line to compile the Maven project
+        // Create a unique directory name using the commit hash and the current time
+        String uniqueDirName = commitHash + "_" + System.currentTimeMillis();
+        cloneRepository(repoUrl, cloneDirPath, uniqueDirName);
+        compileMavenProject(cloneDirPath, uniqueDirName); // [TODO]: Uncomment this line to compile the Maven project
     }
 
     /**
