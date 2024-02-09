@@ -12,6 +12,12 @@ import java.util.Map;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.io.File; 
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.util.Properties;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -85,7 +91,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
             System.out.println("Unhandled event type: " + eventType);
         }
 
-        // System.out.println("Payload: " + payload);
+        System.out.println("Payload: " + payload);
         // Map<String, Object> payload = request_to_map(request.getParameter("payload"));
         // for(String key : payload.keySet()){
         //     System.out.println(payload.get(key));
@@ -93,7 +99,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
         response.getWriter().println("CI job done");
     }
-
 
     /**
      * This function transforms a string in json format into a String,Object map.
@@ -183,6 +188,11 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 System.out.println("Maven project compiled successfully.");
             } else {
                 System.err.println("Maven project compilation failed.");
+
+                String toEmail = "maxism29.mi@gmail.com";
+                String subject = "Build Result";
+                String messageBody = "The build failed";
+                sendBuildResultEmail(toEmail, subject, messageBody);
             }
         } catch (IOException | InterruptedException e) {
             System.err.println("Error compiling Maven project: " + e.getMessage());
@@ -190,7 +200,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
     }    
     
-
      /**
      * Extracts the repository clone URL from the webhook payload.
      * This function uses the Gson library to parse the JSON payload and extract the repository URL.
@@ -269,6 +278,49 @@ public class ContinuousIntegrationServer extends AbstractHandler
         System.out.println("Pull request action: " + action);
     }
 
+    public void sendBuildResultEmail(String toEmail, String subject, String messageBody) {
+        final String fromEmail = "group28github@gmail.com"; //requires valid Gmail id
+        final String password = "asux vdff sxnl gprt"; // correct password for Gmail id
+
+        Properties props = new Properties();
+        props.put("mail.smtp.host", "smtp.gmail.com"); // SMTP Host
+        props.put("mail.smtp.port", "587"); // TLS Port
+        props.put("mail.smtp.auth", "true"); // enable authentication
+        props.put("mail.smtp.starttls.enable", "true"); // enable STARTTLS
+
+        // Create a session with account credentials
+        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+            protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
+                return new javax.mail.PasswordAuthentication(fromEmail, password);
+            }
+        });
+
+        try {
+            MimeMessage msg = new MimeMessage(session);
+            //set message headers
+            msg.addHeader("Content-type", "text/HTML; charset=UTF-8");
+            msg.addHeader("format", "flowed");
+            msg.addHeader("Content-Transfer-Encoding", "8bit");
+
+            msg.setFrom(new InternetAddress(fromEmail, "CI Server"));
+
+            msg.setReplyTo(InternetAddress.parse(fromEmail, false));
+
+            msg.setSubject(subject, "UTF-8");
+
+            msg.setText(messageBody, "UTF-8");
+
+            msg.setSentDate(new java.util.Date());
+
+            msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail, false));
+            Transport.send(msg);
+
+            System.out.println("Email sent successfully!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * This function starts the CI server on port 8028.
      * @param args - Command line arguments
@@ -280,6 +332,4 @@ public class ContinuousIntegrationServer extends AbstractHandler
         server.start();
         server.join();
     }
-
-
 }
