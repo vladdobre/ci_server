@@ -17,10 +17,14 @@ import java.io.FileReader;
 import java.io.FileWriter;
 
 import javax.mail.Message;
+import javax.mail.Multipart;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
 import java.util.Properties;
 
 import org.eclipse.jgit.api.Git;
@@ -175,7 +179,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @throws IOException
      * @throws InterruptedException
      */
-    public void compileMavenProject(String projectDirPath, String uniqueDirName) {
+    public void compileMavenProject(String projectDirPath, String uniqueDirName){
         int exitCode = -1; // Default exit code for failure
         try {
             // Define the command to run mvn clean install
@@ -214,8 +218,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 //TODO: Replace with the email of the committer from payload!
                 String toEmail = "maxism29.mi@gmail.com";
                 String subject = "Build Result Notification";
-                String messageBody = "The build failed";
-                sendBuildResultEmail(toEmail, subject, messageBody);
+                sendBuildResultEmail(toEmail, subject, projectDirPath, uniqueDirName);
             }
         }
     } 
@@ -285,6 +288,69 @@ public class ContinuousIntegrationServer extends AbstractHandler
             System.err.println("Error writing build summary file: " + e.getMessage());
             e.printStackTrace();
         }   
+    }
+
+    /**
+     * This function sends an email notification with the build result.
+     * @param toEmail - The email address to send the notification to
+     * @param subject - The subject of the email
+     * @param projectDirPath - The path to the directory where the Maven project is located
+     * @param uniqueDirName - The unique directory name generated from the commit hash and the current time
+     * @return void
+     * @throws Exception
+     */
+    public void sendBuildResultEmail(String toEmail, String subject, String projectDirPath, String uniqueDirName) {
+        final String fromEmail = "group28github@gmail.com"; //requires valid Gmail id
+        final String password = "asux vdff sxnl gprt"; // correct password for Gmail id
+
+        Properties props = new Properties();
+        props.put("mail.smtp.host", "smtp.gmail.com"); // SMTP Host
+        props.put("mail.smtp.port", "587"); // TLS Port
+        props.put("mail.smtp.auth", "true"); // enable authentication
+        props.put("mail.smtp.starttls.enable", "true"); // enable STARTTLS
+
+        // Create a session with account credentials
+        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+            protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
+                return new javax.mail.PasswordAuthentication(fromEmail, password);
+            }
+        });
+
+        try {
+            // Read the contents of build_summary.json
+            String summaryFilePath = projectDirPath + "/" + uniqueDirName + "/build_summary.json";
+            StringBuilder summaryContent = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new FileReader(summaryFilePath))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    summaryContent.append(line).append("\n");
+                }
+            }
+
+            // Create the message
+            MimeMessage msg = new MimeMessage(session);
+            msg.setFrom(new InternetAddress(fromEmail, "CI Server"));
+            msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+            msg.setSubject(subject);
+
+            // Create a multipart message
+            Multipart multipart = new MimeMultipart();
+
+            // Create the HTML part
+            MimeBodyPart messageBodyPart = new MimeBodyPart();
+            messageBodyPart.setContent(summaryContent.toString(), "text/plain");
+            multipart.addBodyPart(messageBodyPart);
+
+            // Set the multipart message
+            msg.setContent(multipart);
+
+            // Send the message
+            Transport.send(msg);
+
+            System.out.println("Email sent successfully!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -383,15 +449,13 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
 
         String repoUrl = extractRepositoryUrl(payload);
-
         String baseDirPath = System.getProperty("user.dir");
         String repoDir = "/repo_bdd"; //maybe a slight change in path is needed as we want ot be inside the repo we just cloned this folder holds all recent cloned copies
         String cloneDirPath = baseDirPath + repoDir;
-        
         String commitHash = getLatestCommitHashFromPush(payload);
-
         // Create a unique directory name using the commit hash and the current time
         String uniqueDirName = commitHash + "_" + System.currentTimeMillis();
+
         cloneRepository(repoUrl, cloneDirPath, uniqueDirName);
         compileMavenProject(cloneDirPath, uniqueDirName);
         // removeClonedRepository(cloneDirPath, uniqueDirName);
@@ -408,49 +472,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
         Map payloadMap = gson.fromJson(payload, Map.class);
         String action = (String) payloadMap.get("action");
         System.out.println("Pull request action: " + action);
-    }
-
-    public void sendBuildResultEmail(String toEmail, String subject, String messageBody) {
-        final String fromEmail = "group28github@gmail.com"; //requires valid Gmail id
-        final String password = "asux vdff sxnl gprt"; // correct password for Gmail id
-
-        Properties props = new Properties();
-        props.put("mail.smtp.host", "smtp.gmail.com"); // SMTP Host
-        props.put("mail.smtp.port", "587"); // TLS Port
-        props.put("mail.smtp.auth", "true"); // enable authentication
-        props.put("mail.smtp.starttls.enable", "true"); // enable STARTTLS
-
-        // Create a session with account credentials
-        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
-            protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
-                return new javax.mail.PasswordAuthentication(fromEmail, password);
-            }
-        });
-
-        try {
-            MimeMessage msg = new MimeMessage(session);
-            //set message headers
-            msg.addHeader("Content-type", "text/HTML; charset=UTF-8");
-            msg.addHeader("format", "flowed");
-            msg.addHeader("Content-Transfer-Encoding", "8bit");
-
-            msg.setFrom(new InternetAddress(fromEmail, "CI Server"));
-
-            msg.setReplyTo(InternetAddress.parse(fromEmail, false));
-
-            msg.setSubject(subject, "UTF-8");
-
-            msg.setText(messageBody, "UTF-8");
-
-            msg.setSentDate(new java.util.Date());
-
-            msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail, false));
-            Transport.send(msg);
-
-            System.out.println("Email sent successfully!");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
