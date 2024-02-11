@@ -46,7 +46,15 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
-
+    // [IMPORTANT]: Update the path to the mvn executable
+    public final String[] mavenCommand = {
+        "C:\\Program Files\\Maven\\apache-maven-3.9.6\\bin\\mvn.cmd",
+        "clean",
+        "install",
+        ">", 
+        "mavenOutput.txt"
+    };
+     
     @Override
     /**
      * This function handles the incoming webhook requests from GitHub.
@@ -130,12 +138,16 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @return The latest commit message
      */
     public String getLatestCommitMessageFromPush(String payload) {
-        Gson gson = new Gson();
-        Map<String, Object> payloadMap = gson.fromJson(payload, new TypeToken<HashMap<String, Object>>(){}.getType());
-        List<Map<String, Object>> commits = (List<Map<String, Object>>) payloadMap.get("commits");
-        if (commits != null && !commits.isEmpty()) {
-            Map<String, Object> latestCommit = commits.get(commits.size() - 1);
-            return (String) latestCommit.get("message");
+        try {
+            Map<String, Object> payloadMap = request_to_map(payload);
+            List<Map<String, Object>> commits = (List<Map<String, Object>>) payloadMap.get("commits");
+            if (commits != null && !commits.isEmpty()) {
+                Map<String, Object> latestCommit = commits.get(commits.size() - 1);
+                return (String) latestCommit.get("message");
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing JSON payload: " + e.getMessage());
+            e.printStackTrace();
         }
         return null; // Return null if no commits found
     }
@@ -175,16 +187,17 @@ public class ContinuousIntegrationServer extends AbstractHandler
      *
      * @param projectDirPath the path to the directory where the Maven project is located.
      * @param uniqueDirName the unique directory name generated from the commit hash and the current time.
+     * @param payload the JSON payload received from the webhook.
      * @return void
      * @throws IOException
      * @throws InterruptedException
      */
-    public void compileMavenProject(String projectDirPath, String uniqueDirName){
+    public void compileMavenProject(String projectDirPath, String uniqueDirName, String payload){
         int exitCode = -1; // Default exit code for failure
         try {
             // Define the command to run mvn clean install
             // [IMPORTANT]: Update the command to use the correct path to the mvn executable
-            List<String> command = Arrays.asList("C:\\Program Files\\Maven\\apache-maven-3.9.6\\bin\\mvn.cmd", "clean", "install",">", "mavenOutput.txt");
+            List<String> command = Arrays.asList(mavenCommand);
             
             // Create a process builder to execute the command in the project directory
             ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -214,9 +227,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
             
             if (exitCode != 0) {
                 // If compilation failed, send email notification
-
-                //TODO: Replace with the email of the committer from payload!
-                String toEmail = "maxism29.mi@gmail.com";
+                String toEmail = extractEmail(payload);
+                System.out.println("Email: " + toEmail);
                 String subject = "Build Result Notification";
                 sendBuildResultEmail(toEmail, subject, projectDirPath, uniqueDirName);
             }
@@ -397,6 +409,27 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
     }
     
+    /**
+     * Extracts the email of the committer from the webhook payload.
+     * @param payload - The JSON payload received from the webhook
+     * @return The email of the committer
+     * @throws Exception
+     */
+    public String extractEmail(String payload) {
+        Map<String, Object> payloadMap = request_to_map(payload);
+        //System.out.println("payloadMap " + payloadMap);
+        Map<String, Object> head_commit = (Map<String, Object>) payloadMap.get("head_commit");
+        System.out.println("head_commit " + head_commit) ;
+        if (head_commit != null) {
+            Map<String, Object> author = (Map<String, Object>) head_commit.get("author");
+            System.out.println("author " + author);
+            if (author != null) {
+                return (String) author.get("email");
+            }
+        }
+        return null; 
+    }
+
      /**
      * Extracts the repository clone URL from the webhook payload.
      * This function uses the Gson library to parse the JSON payload and extract the repository URL.
@@ -404,17 +437,20 @@ public class ContinuousIntegrationServer extends AbstractHandler
      *
      * @param payload the JSON payload received from the webhook.
      * @return the clone URL of the repository.
+     * @throws Exception
      */
     public String extractRepositoryUrl(String payload) {
-        Gson gson = new Gson();
-        Type type = new TypeToken<Map<String, Object>>(){}.getType();
-        Map<String, Object> payloadMap = gson.fromJson(payload, type);
-
-        Map<String, Object> repository = (Map<String, Object>) payloadMap.get("repository");
-        if (repository != null) {
-            return (String) repository.get("clone_url");
+        try {
+            Map<String, Object> payloadMap = request_to_map(payload);
+            Map<String, Object> repository = (Map<String, Object>) payloadMap.get("repository");
+            if (repository != null) {
+                return (String) repository.get("clone_url");
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing JSON payload: " + e.getMessage());
+            e.printStackTrace();
         }
-        return null; // [TODO]: throw an exception if the URL cannot be extracted
+        return null;
     }
 
     /**
@@ -422,17 +458,20 @@ public class ContinuousIntegrationServer extends AbstractHandler
      *
      * @param payload the JSON payload received from the webhook.
      * @return the commit hash of the latest commit.
+     * @throws Exception
      */
     private String getLatestCommitHashFromPush(String payload) {
-        Gson gson = new Gson();
-        Type type = new TypeToken<Map<String, Object>>(){}.getType();
-        Map<String, Object> payloadMap = gson.fromJson(payload, type);
-        
-        List<Map<String, Object>> commits = (List<Map<String, Object>>) payloadMap.get("commits");
-        if (commits != null && !commits.isEmpty()) {
-            // The first commit in the list is the latest commit
-            Map<String, Object> latestCommit = commits.get(0); 
-            return (String) latestCommit.get("id");
+        try {
+            Map<String, Object> payloadMap = request_to_map(payload);
+            List<Map<String, Object>> commits = (List<Map<String, Object>>) payloadMap.get("commits");
+            if (commits != null && !commits.isEmpty()) {
+                // The first commit in the list is the latest commit
+                Map<String, Object> latestCommit = commits.get(0); 
+                return (String) latestCommit.get("id");
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing JSON payload: " + e.getMessage());
+            e.printStackTrace();
         }
         return null; 
     }
@@ -457,8 +496,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
         String uniqueDirName = commitHash + "_" + System.currentTimeMillis();
 
         cloneRepository(repoUrl, cloneDirPath, uniqueDirName);
-        compileMavenProject(cloneDirPath, uniqueDirName);
-        // removeClonedRepository(cloneDirPath, uniqueDirName);
+        compileMavenProject(cloneDirPath, uniqueDirName, payload);
+        removeClonedRepository(cloneDirPath, uniqueDirName);
     }
 
     /**
@@ -468,8 +507,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
      */
     private void handlePullRequestEvent(String payload) {
         // Parse the payload to extract pull request event information
-        Gson gson = new Gson();
-        Map payloadMap = gson.fromJson(payload, Map.class);
+        Map payloadMap = request_to_map(payload);
         String action = (String) payloadMap.get("action");
         System.out.println("Pull request action: " + action);
     }

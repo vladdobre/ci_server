@@ -1,4 +1,6 @@
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ContinuousIntegrationServerTest {
@@ -58,6 +60,7 @@ public class ContinuousIntegrationServerTest {
         assertEquals(expectedMessage, actualMessage, "The commit message should match the latest commit's message.");
     }
 
+    @Test
     /**
      * Test the getLatestCommitMessageFromPush method with a null payload
      * 
@@ -65,7 +68,6 @@ public class ContinuousIntegrationServerTest {
      * 
      * The expected message is null.
      */
-    @Test
     public void testGetLatestCommitMessageFromPushWithNullPayload() {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
@@ -75,6 +77,7 @@ public class ContinuousIntegrationServerTest {
         assertEquals(expectedMessage, actualMessage, "The commit message should be null for a null payload.");
     }
 
+    @Test
     /**
      * Test the extractRepositoryUrl method
      * 
@@ -83,7 +86,6 @@ public class ContinuousIntegrationServerTest {
      * 
      * The expected URL is "https://github.com/Name/test_ci.git".
      */
-    @Test
     public void testExtractRepositoryUrl() {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
@@ -96,6 +98,7 @@ public class ContinuousIntegrationServerTest {
         assertEquals(expectedUrl, actualUrl, "The clone url should match the expected url.");
     }
 
+    @Test
     /**
      * Test the extractRepositoryUrl method with a null payload
      * 
@@ -103,7 +106,6 @@ public class ContinuousIntegrationServerTest {
      * 
      * The expected URL is null.
      */
-    @Test
     public void testExtractRepositoryUrlWithNullPayload() {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
@@ -112,7 +114,6 @@ public class ContinuousIntegrationServerTest {
 
         assertEquals(expectedUrl, actualUrl, "The clone url should be null for a null payload.");
     }
-
 
 
 }
