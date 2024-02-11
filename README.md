@@ -87,7 +87,7 @@ mvn test
 In order to make the server visible online we need to do the following:
 1) Run ngrok.exe and use the following command "ngrok http --domain thrush-engaging-monkfish.ngrok-free.app 8080"
 
-Note: The domain is registered to my ngrok account. If anyone needs to access it, you can go to https://thrush-engaging-monkfish.ngrok-free.app/ (This link seems broken)
+Note: The domain is registered to my ngrok account. If anyone needs to access it, you can go to https://thrush-engaging-monkfish.ngrok-free.app/
 
 Note 2: If the domain is changed for any reason, make sure to update the url in the webhook in Github
 
@@ -106,3 +106,5 @@ Note 2: If the domain is changed for any reason, make sure to update the url in 
 #### Vlad Dobre (dobre)
 
 ## Team (Essence)
+We are currently completeing some of the items in the checklist for the Performing state. The team was Seeded during the course outline and when the assignment was presented. The team was Formed during our initial meeting when we spread out the work among our team members. We have fulfilled the criteria for the Collaborating state, but we need more time working as a team before we complete the checklist for the Performing state. This is because we need more time to see if we can consistently meet our commitments and adapt to the changing context of a project.
+
