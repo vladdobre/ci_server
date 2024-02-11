@@ -115,5 +115,19 @@ public class ContinuousIntegrationServerTest {
         assertEquals(expectedUrl, actualUrl, "The clone url should be null for a null payload.");
     }
 
+    @Test
+    /**
+     * Test the extractEmail method
+     * 
+     * This test simulates a payload for a push event and checks if the method
+     * returns the correct email.
+     */
+    public void testExtractEmailWithNullPayload() {
+        ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
+        String expectedUrl = null;
+        String actualUrl = ciServer.extractEmail(null);
+
+        assertEquals(expectedUrl, actualUrl, "The clone email should be null for a null payload.");
+    }
 }

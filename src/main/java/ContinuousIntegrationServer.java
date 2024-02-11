@@ -416,16 +416,18 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @throws Exception
      */
     public String extractEmail(String payload) {
-        Map<String, Object> payloadMap = request_to_map(payload);
-        //System.out.println("payloadMap " + payloadMap);
-        Map<String, Object> head_commit = (Map<String, Object>) payloadMap.get("head_commit");
-        System.out.println("head_commit " + head_commit) ;
-        if (head_commit != null) {
-            Map<String, Object> author = (Map<String, Object>) head_commit.get("author");
-            System.out.println("author " + author);
-            if (author != null) {
-                return (String) author.get("email");
+        try {
+            Map<String, Object> payloadMap = request_to_map(payload);
+            Map<String, Object> head_commit = (Map<String, Object>) payloadMap.get("head_commit");
+            if (head_commit != null) {
+                Map<String, Object> author = (Map<String, Object>) head_commit.get("author");
+                if (author != null) {
+                    return (String) author.get("email");
+                }
             }
+        } catch (Exception e) {
+            System.err.println("Error parsing JSON payload: " + e.getMessage());
+            e.printStackTrace();
         }
         return null; 
     }
