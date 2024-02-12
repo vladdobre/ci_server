@@ -1,5 +1,9 @@
 repo_bdd/*
 target/*
 .vscode/*
-src/test/test_snippets/Compile
-src/test/test_snippets/No_Compile
+src/test/test_snippets/Compile/target/*
+src/test/test_snippets/Compile/build_summary.json
+src/test/test_snippets/Compile/mavenOutput.txt
+src/test/test_snippets/No_Compile/target/*
+src/test/test_snippets/No_Compile/build_summary.json
+src/test/test_snippets/No_Compile/mavenOutput.txt

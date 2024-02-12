@@ -2,6 +2,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.nio.file.Path;
+
 public class ContinuousIntegrationServerTest {
 
     @Test
@@ -130,13 +132,94 @@ public class ContinuousIntegrationServerTest {
         assertEquals(expectedUrl, actualUrl, "The clone email should be null for a null payload.");
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @Test
     public void testcompileMavenProjectNotCompile() {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
-        String projectDirPath = "./../test_snippets";
+        String cwd = Path.of("").toAbsolutePath().toString();
+        String projectDirPath = "src\\test\\test_snippets";
+        cwd = cwd + "/" + projectDirPath;
+        projectDirPath = cwd;
         String uniqueDirName = "No_Compile";
-        String payload = "{\"head_commit\":{\"author\":{\"email\":\"maxism29.mi@gmail.com\"}}}";
+        String payload = "{\"head_commit\":{\"author\":{\"email\":\"test@mail.test\"}}}";
 
         boolean result = ciServer.compileMavenProject(projectDirPath, uniqueDirName, payload);
         assertEquals(false, result);
@@ -146,9 +229,12 @@ public class ContinuousIntegrationServerTest {
     public void testcompileMavenProjectCompile() {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
-        String projectDirPath = "C:\\Users\\Server\\Documents\\GitHub\\ci_server\\src\\test\\test_snippets";
+        String cwd = Path.of("").toAbsolutePath().toString();
+        String projectDirPath = "src\\test\\test_snippets";
+        cwd = cwd + "\\" + projectDirPath;
+        projectDirPath = cwd;
         String uniqueDirName = "Compile";
-        String payload = "{\"head_commit\":{\"author\":{\"email\":\"maxism29.mi@gmail.com\"}}}";
+        String payload = "{\"head_commit\":{\"author\":{\"email\":\"test@mail.test\"}}}";
 
         boolean result = ciServer.compileMavenProject(projectDirPath, uniqueDirName, payload);
         assertEquals(true, result);
