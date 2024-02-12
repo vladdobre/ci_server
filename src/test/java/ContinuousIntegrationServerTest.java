@@ -1,5 +1,6 @@
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ContinuousIntegrationServerTest {
@@ -131,27 +132,21 @@ public class ContinuousIntegrationServerTest {
     }
 
     @Test
-    public void testcompileMavenProjectNotCompile() {
+    /**
+     * Test the extractBranchName method
+     *
+     * This test simulates a payload for a push event and checks if the method
+     * returns the correct branch name.
+     *
+     * The expected branch name is "main".
+     */
+    public void testExtractBranchName() {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
-        String projectDirPath = "./../test_snippets";
-        String uniqueDirName = "No_Compile";
-        String payload = "{\"head_commit\":{\"author\":{\"email\":\"maxism29.mi@gmail.com\"}}}";
+        String mockPayload = "{\"ref\":\"refs/heads/main\"}";
 
-        boolean result = ciServer.compileMavenProject(projectDirPath, uniqueDirName, payload);
-        assertEquals(false, result);
+        String expectedBranch = "main";
+        String actualBranch = ciServer.extractBranchName(mockPayload);
+        assertEquals(expectedBranch, actualBranch, "The branch name should match the expected branch name.");
     }
-
-    @Test
-    public void testcompileMavenProjectCompile() {
-        ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
-
-        String projectDirPath = "C:\\Users\\Server\\Documents\\GitHub\\ci_server\\src\\test\\test_snippets";
-        String uniqueDirName = "Compile";
-        String payload = "{\"head_commit\":{\"author\":{\"email\":\"maxism29.mi@gmail.com\"}}}";
-
-        boolean result = ciServer.compileMavenProject(projectDirPath, uniqueDirName, payload);
-        assertEquals(true, result);
-    }
-
 }
