@@ -489,6 +489,27 @@ public class ContinuousIntegrationServer extends AbstractHandler
     }
     
     /**
+     * Extracts the branch name from the webhook payload.
+     * 
+     * @param payload
+     * @return the name of the branch
+     * @throws Exception
+     */
+    public String extractBranchName(String payload) {
+        try {
+            Map<String, Object> payloadMap = request_to_map(payload);
+            String ref = (String) payloadMap.get("ref");
+            if (ref != null && ref.startsWith("refs/heads/")) {
+                return ref.substring("refs/heads/".length());
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing JSON payload for branch name: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null; 
+    }
+    
+    /**
      * Extracts the latest commit hash from the push event payload.
      *
      * @param payload the JSON payload received from the webhook.
@@ -524,11 +545,12 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
         String repoUrl = extractRepositoryUrl(payload);
         String repoName = extractRepositoryName(payload);
+        String branchName = extractBranchName(payload);
         String baseDirPath = System.getProperty("user.dir");
         String cloneDirPath = baseDirPath +"/"+ repoDir;
         String commitHash = getLatestCommitHashFromPush(payload);
         // Create a unique directory name using the commit hash and the current time
-        String uniqueDirName = repoName + "_" +commitHash + "_" + System.currentTimeMillis();
+        String uniqueDirName = repoName + "_" + branchName + "_" +commitHash + "_" + System.currentTimeMillis();
 
         cloneRepository(repoUrl, cloneDirPath, uniqueDirName);
         compileMavenProject(cloneDirPath, uniqueDirName, payload);
