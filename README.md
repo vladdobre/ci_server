@@ -24,7 +24,7 @@ mvn exec:java
 5) The server should now be running on localhost:8028
 6) Run ngrok to make the server visible online by using the following command 
 ```
-ngrok http 8028"
+ngrok http 8028
 ```
 7) The server should now be visible online and you can access it using the url provided by ngrok
 8) You can use the url to use the server as a webhook in Github 
@@ -57,7 +57,7 @@ mvn exec:java
 ```
 5) Run ngrok to make the server visible online by using the following command 
 ```
-ngrok http 8028"
+ngrok http 8028
 ```
 6) The server should now be visible online and you can access it using the url provided by ngrok
 7) You can use the url to use the server as a webhook in Github
