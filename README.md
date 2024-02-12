@@ -9,9 +9,14 @@ In order to Run the project locally, you need to have the following installed:
 2) Maven
 3) Ngrok (Check the section "Starting the Server" for more information)
 
+
 Once you have the above installed, you can run the project by doing the following:
 
 1) Clone the repository
+2) Create a folder for saving the build history using the following command only the first time you run the project:
+```
+mkdir ../build_history
+```
 2) Open the project in your favorite IDE
 3) Run the following command in the terminal to compile the project:
 ```

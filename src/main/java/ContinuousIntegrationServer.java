@@ -67,7 +67,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         "mavenOutput.txt"
     };
     // Directory to store cloned repositories and build summaries. It's located in the server.
-    public final  String repoDir = "../repo_bdd"; 
+    public final  String repoDir = "../build_history"; 
      
     @Override
     /**
@@ -525,7 +525,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
         String repoUrl = extractRepositoryUrl(payload);
         String repoName = extractRepositoryName(payload);
         String baseDirPath = System.getProperty("user.dir");
-        String cloneDirPath = baseDirPath + repoDir;
+        String cloneDirPath = baseDirPath +"/"+ repoDir;
         String commitHash = getLatestCommitHashFromPush(payload);
         // Create a unique directory name using the commit hash and the current time
         String uniqueDirName = repoName + "_" +commitHash + "_" + System.currentTimeMillis();
@@ -549,15 +549,15 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
 
     /**
-     * This function lists all the builds in the repo_bdd directory.
+     * This function lists all the builds in the repoDir directory.
      * 
      * @param response
      * @return void
      * @throws IOException
      */
     private void listBuilds(HttpServletResponse response) throws IOException {
-        File buildDir = new File("repo_bdd"); 
-        File[] buildDirs = buildDir.listFiles(File::isDirectory); // List all directories within repo_bdd
+        File buildDir = new File(repoDir); 
+        File[] buildDirs = buildDir.listFiles(File::isDirectory); // List all directories within repoDir
     
         PrintWriter out = response.getWriter();
         out.println("<h1>Build History</h1>");
@@ -580,7 +580,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
      */
     private void showBuildDetails(String target, HttpServletResponse response) throws IOException {
         String buildId = target.substring("/builds/".length()); // Extract the build ID from the URL
-        File buildDir = new File("repo_bdd", buildId);
+        File buildDir = new File(repoDir, buildId);
     
         PrintWriter out = response.getWriter();
         if (buildDir.exists() && buildDir.isDirectory()) {
