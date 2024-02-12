@@ -162,7 +162,7 @@ public class ContinuousIntegrationServerTest {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
         String cwd = Path.of("").toAbsolutePath().toString();
-        String projectDirPath = "src\\test\\test_snippets";
+        String projectDirPath = "src/test/test_snippets";
         cwd = cwd + "/" + projectDirPath;
         projectDirPath = cwd;
         String uniqueDirName = "No_Compile";
@@ -182,8 +182,8 @@ public class ContinuousIntegrationServerTest {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
         String cwd = Path.of("").toAbsolutePath().toString();
-        String projectDirPath = "src\\test\\test_snippets";
-        cwd = cwd + "\\" + projectDirPath;
+        String projectDirPath = "src/test/test_snippets";
+        cwd = cwd + "/" + projectDirPath;
         projectDirPath = cwd;
         String uniqueDirName = "Compile";
         String payload = "{\"head_commit\":{\"author\":{\"email\":\"test@mail.test\"}}}";
@@ -202,8 +202,8 @@ public class ContinuousIntegrationServerTest {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
         String cwd = Path.of("").toAbsolutePath().toString();
-        String projectDirPath = "src\\test\\test_snippets";
-        cwd = cwd + "\\" + projectDirPath;
+        String projectDirPath = "src/test/test_snippets";
+        cwd = cwd + "/" + projectDirPath;
         projectDirPath = cwd;
         String uniqueDirName = "Test_Success";
         String payload = "{\"head_commit\":{\"author\":{\"email\":\"test@mail.test\"}}}";
@@ -222,8 +222,8 @@ public class ContinuousIntegrationServerTest {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
 
         String cwd = Path.of("").toAbsolutePath().toString();
-        String projectDirPath = "src\\test\\test_snippets";
-        cwd = cwd + "\\" + projectDirPath;
+        String projectDirPath = "src/test/test_snippets";
+        cwd = cwd + "/" + projectDirPath;
         projectDirPath = cwd;
         String uniqueDirName = "Test_Fail";
         String payload = "{\"head_commit\":{\"author\":{\"email\":\"test@mail.test\"}}}";
