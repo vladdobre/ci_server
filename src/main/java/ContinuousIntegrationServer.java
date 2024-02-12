@@ -2,7 +2,6 @@
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,7 +28,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -38,7 +36,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
-import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -158,8 +155,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 return (String) latestCommit.get("message");
             }
         } catch (Exception e) {
-            System.err.println("Error parsing JSON payload: " + e.getMessage());
-            e.printStackTrace();
+            // System.err.println("Error parsing JSON payload: " + e.getMessage());
+            // e.printStackTrace();
         }
         return null; // Return null if no commits found
     }
@@ -444,8 +441,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error parsing JSON payload: " + e.getMessage());
-            e.printStackTrace();
+            // System.err.println("Error parsing JSON payload: " + e.getMessage());
+            // e.printStackTrace();
         }
         return null; 
     }
@@ -467,8 +464,8 @@ public class ContinuousIntegrationServer extends AbstractHandler
                 return (String) repository.get("clone_url");
             }
         } catch (Exception e) {
-            System.err.println("Error parsing JSON payload: " + e.getMessage());
-            e.printStackTrace();
+            // System.err.println("Error parsing JSON payload: " + e.getMessage());
+            // e.printStackTrace();
         }
         return null;
     }

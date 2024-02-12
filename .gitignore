@@ -4,6 +4,15 @@ target/*
 src/test/test_snippets/Compile/target/*
 src/test/test_snippets/Compile/build_summary.json
 src/test/test_snippets/Compile/mavenOutput.txt
+
 src/test/test_snippets/No_Compile/target/*
 src/test/test_snippets/No_Compile/build_summary.json
 src/test/test_snippets/No_Compile/mavenOutput.txt
+
+src/test/test_snippets/Test_Success/target/*
+src/test/test_snippets/Test_Success/build_summary.json
+src/test/test_snippets/Test_Success/mavenOutput.txt
+
+src/test/test_snippets/Test_Fail/target/*
+src/test/test_snippets/Test_Fail/build_summary.json
+src/test/test_snippets/Test_Fail/mavenOutput.txt
