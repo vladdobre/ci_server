@@ -192,8 +192,9 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @throws IOException
      * @throws InterruptedException
      */
-    public void compileMavenProject(String projectDirPath, String uniqueDirName, String payload){
+    public boolean compileMavenProject(String projectDirPath, String uniqueDirName, String payload){
         int exitCode = -1; // Default exit code for failure
+        boolean buildSuccess = false;
         try {
             // Define the command to run mvn clean install
             // [IMPORTANT]: Update the command to use the correct path to the mvn executable
@@ -215,6 +216,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
             // Check the exit code to determine if the build was successful
             if (exitCode == 0) {
                 System.out.println("Maven project compiled successfully.");
+                buildSuccess = true;
             } else {
                 System.err.println("Maven project compilation failed.");
             }
@@ -225,14 +227,18 @@ public class ContinuousIntegrationServer extends AbstractHandler
             // Generate and write JSON summary file
             generateSummaryFile(projectDirPath, uniqueDirName);
             
-            if (exitCode != 0) {
-                // If compilation failed, send email notification
-                String toEmail = extractEmail(payload);
-                System.out.println("Email: " + toEmail);
-                String subject = "Build Result Notification";
+            String toEmail = extractEmail(payload);
+            System.out.println("Email: " + toEmail);
+            String subject = "Build Result Notification";
+            try {
                 sendBuildResultEmail(toEmail, subject, projectDirPath, uniqueDirName);
+            } catch (Exception e) {
+                System.err.println("Error sending build result email: " + e.getMessage());
+                e.printStackTrace();
             }
+            
         }
+        return buildSuccess;
     } 
     
     /**

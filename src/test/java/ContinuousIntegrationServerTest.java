@@ -1,6 +1,5 @@
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ContinuousIntegrationServerTest {
@@ -130,4 +129,29 @@ public class ContinuousIntegrationServerTest {
 
         assertEquals(expectedUrl, actualUrl, "The clone email should be null for a null payload.");
     }
+
+    @Test
+    public void testcompileMavenProjectNotCompile() {
+        ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
+
+        String projectDirPath = "./../test_snippets";
+        String uniqueDirName = "No_Compile";
+        String payload = "{\"head_commit\":{\"author\":{\"email\":\"maxism29.mi@gmail.com\"}}}";
+
+        boolean result = ciServer.compileMavenProject(projectDirPath, uniqueDirName, payload);
+        assertEquals(false, result);
+    }
+
+    @Test
+    public void testcompileMavenProjectCompile() {
+        ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
+
+        String projectDirPath = "C:\\Users\\Server\\Documents\\GitHub\\ci_server\\src\\test\\test_snippets";
+        String uniqueDirName = "Compile";
+        String payload = "{\"head_commit\":{\"author\":{\"email\":\"maxism29.mi@gmail.com\"}}}";
+
+        boolean result = ciServer.compileMavenProject(projectDirPath, uniqueDirName, payload);
+        assertEquals(true, result);
+    }
+
 }
