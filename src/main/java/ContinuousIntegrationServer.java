@@ -6,7 +6,10 @@ import javax.servlet.ServletException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -26,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -47,13 +51,23 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 public class ContinuousIntegrationServer extends AbstractHandler
 {
     // [IMPORTANT]: Update the path to the mvn executable
+    // public final String[] mavenCommand = {
+    //     "C:\\Program Files\\Maven\\apache-maven-3.9.6\\bin\\mvn.cmd",
+    //     "clean",
+    //     "install",
+    //     ">", 
+    //     "mavenOutput.txt"
+    // };
+    // Working in Ubuntu Linux
     public final String[] mavenCommand = {
-        "C:\\Program Files\\Maven\\apache-maven-3.9.6\\bin\\mvn.cmd",
+        "mvn",
         "clean",
         "install",
         ">", 
         "mavenOutput.txt"
     };
+    // Directory to store cloned repositories and build summaries. It's located in the server.
+    public final  String repoDir = "../repo_bdd"; 
      
     @Override
     /**
@@ -96,10 +110,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
         String payload = payloadBuilder.toString();
 
-
-        //For the Issue #2, we need to implement the  Webhook listener
-        // so this part get listened to the push and pull_request events
-        // and print the last commit in a push of the action in case of pull_request.
         if ("push".equals(eventType)) {
             handlePushEvent(payload);
         } else if ("pull_request".equals(eventType)) {
@@ -108,13 +118,15 @@ public class ContinuousIntegrationServer extends AbstractHandler
             System.out.println("Unhandled event type: " + eventType);
         }
 
-        // System.out.println("Payload: " + payload);
-        // Map<String, Object> payload = request_to_map(request.getParameter("payload"));
-        // for(String key : payload.keySet()){
-        //     System.out.println(payload.get(key));
-        // }
-
-        response.getWriter().println("CI job done");
+        if ("/builds".equals(target)) {
+            System.out.println("Target : "+ target);
+            listBuilds(response);
+        } else if (target.startsWith("/builds/")) {
+            showBuildDetails(target, response);
+        } else {
+            // Handle other requests or show default message
+            response.getWriter().println("CI Server is running. Use /builds to list all builds.");
+        }
     }
 
     /**
@@ -456,6 +468,27 @@ public class ContinuousIntegrationServer extends AbstractHandler
     }
 
     /**
+     * Extracts the repository name from the webhook payload.
+     * 
+     * @param payload
+     * @return the name of the repository
+     * @throws Exception 
+     */
+    public String extractRepositoryName(String payload) {
+        try {
+            Map<String, Object> payloadMap = request_to_map(payload);
+            Map<String, Object> repository = (Map<String, Object>) payloadMap.get("repository");
+            if (repository != null) {
+                return (String) repository.get("name");
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing JSON payload: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    /**
      * Extracts the latest commit hash from the push event payload.
      *
      * @param payload the JSON payload received from the webhook.
@@ -490,12 +523,12 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }
 
         String repoUrl = extractRepositoryUrl(payload);
+        String repoName = extractRepositoryName(payload);
         String baseDirPath = System.getProperty("user.dir");
-        String repoDir = "/repo_bdd"; //maybe a slight change in path is needed as we want ot be inside the repo we just cloned this folder holds all recent cloned copies
         String cloneDirPath = baseDirPath + repoDir;
         String commitHash = getLatestCommitHashFromPush(payload);
         // Create a unique directory name using the commit hash and the current time
-        String uniqueDirName = commitHash + "_" + System.currentTimeMillis();
+        String uniqueDirName = repoName + "_" +commitHash + "_" + System.currentTimeMillis();
 
         cloneRepository(repoUrl, cloneDirPath, uniqueDirName);
         compileMavenProject(cloneDirPath, uniqueDirName, payload);
@@ -514,6 +547,58 @@ public class ContinuousIntegrationServer extends AbstractHandler
         System.out.println("Pull request action: " + action);
     }
 
+
+    /**
+     * This function lists all the builds in the repo_bdd directory.
+     * 
+     * @param response
+     * @return void
+     * @throws IOException
+     */
+    private void listBuilds(HttpServletResponse response) throws IOException {
+        File buildDir = new File("repo_bdd"); 
+        File[] buildDirs = buildDir.listFiles(File::isDirectory); // List all directories within repo_bdd
+    
+        PrintWriter out = response.getWriter();
+        out.println("<h1>Build History</h1>");
+    
+        if (buildDirs != null) {
+            for (File dir : buildDirs) {
+                String buildId = dir.getName(); // Use the directory name as the build ID
+                out.println("<div><a href='/builds/" + buildId + "'>" + buildId + "</a></div>");
+            }
+        }
+    }
+    
+    /**
+     * This function shows the build details for a specific build.
+     * 
+     * @param target
+     * @param response
+     * @return void
+     * @throws IOException
+     */
+    private void showBuildDetails(String target, HttpServletResponse response) throws IOException {
+        String buildId = target.substring("/builds/".length()); // Extract the build ID from the URL
+        File buildDir = new File("repo_bdd", buildId);
+    
+        PrintWriter out = response.getWriter();
+        if (buildDir.exists() && buildDir.isDirectory()) {
+            File buildSummaryFile = new File(buildDir, "build_summary.json");
+            if (buildSummaryFile.exists()) {
+                String content = new String(Files.readAllBytes(buildSummaryFile.toPath()), StandardCharsets.UTF_8);
+                out.println("<h1>Build Details for " + buildId + "</h1>");
+                out.println("<pre>" + content + "</pre>");
+            } else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                out.println("<h1>Build Details Not Found</h1>");
+            }
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            out.println("<h1>Build Not Found</h1>");
+        }
+    }
+    
     /**
      * This function starts the CI server on port 8028.
      * @param args - Command line arguments
