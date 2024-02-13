@@ -104,10 +104,22 @@ Note 2: If the domain is changed for any reason, make sure to update the url in 
 
 ## Statement of contributions
 #### Ilias Lachiri (lachiri)
-
+* Implemented `cloneRepository`, `handlePushEvent`, `handlePullRequestEvent`, diffrent function to extract the information from the payload and test for `cloneRepository` and `handlePushEvent`.
+* Wrote the part of the README that explains how to run the project.
+* Setup the server on the KTH server to make the ngrok domain visible online.
+* Generated and added some JavaDoc
+* Ussing badge to show the build status in the README file. (which is the Group remarkable achivement)
 #### Johann Biörck (jbiorck)
+* Implemented `compileMavenProject`, `sendBuildResultEmail`, `extractEmail` with assistance from others.
+* Added some JavaDoc
+* Created tests for null payload with Max and tests for compilation and test execuction with Vlad and Johann, and did some bugfixing in the process.
+* Worked on README
 
 #### Kristian Fatohi (kfatohi)
+* Implemented `compileMavenProject`, `sendBuildResultEmail`, `extractEmail` with assistance from others.
+* Created tests for `extractEmail`
+* Worked on README
+
 
 #### Max Israelsson (maxisr)
 * Implemented `compileMavenProject`, `generateSummaryFile`, `sendBuildResultEmail`, `extractEmail`, and `removeClonedRepository` with assistance from others.
