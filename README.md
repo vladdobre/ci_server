@@ -93,7 +93,7 @@ mvn test
 
 ## Starting the Server
 In order to make the server visible online we need to do the following:
-1) Run ngrok.exe and use the following command "ngrok http --domain thrush-engaging-monkfish.ngrok-free.app 8080"
+1) Run ngrok.exe and use the following command "ngrok http --domain thrush-engaging-monkfish.ngrok-free.app 8028"
 
 Note: The domain is registered to my ngrok account. If anyone needs to access it, you can go to https://thrush-engaging-monkfish.ngrok-free.app/
 
