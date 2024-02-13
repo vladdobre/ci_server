@@ -2,7 +2,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
 import java.nio.file.Path;
 
 public class ContinuousIntegrationServerTest {
@@ -151,6 +155,29 @@ public class ContinuousIntegrationServerTest {
         String actualBranch = ciServer.extractBranchName(mockPayload);
         assertEquals(expectedBranch, actualBranch, "The branch name should match the expected branch name.");
     }
+
+    @Test
+    public void testCloneRepositoryFailure() {
+        ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
+        
+        String repoUrl = "https://github.com/invalid/repo.git";
+        String baseCloneDirPath = System.getProperty("java.io.tmpdir");
+        String uniqueDirName = "testCloneFailure-" + System.currentTimeMillis();
+        
+        // Redirect standard error to capture error messages
+        ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(errContent));
+        
+        ciServer.cloneRepository(repoUrl, baseCloneDirPath, uniqueDirName);
+        
+        // Check if the error output contains the error message
+        String output = errContent.toString();
+        assertTrue(output.contains("Error cloning repository:"));
+        
+        // Cleanup: Reset the standard error
+        System.setErr(System.err);
+    }
+
 
     @Test
     /**
