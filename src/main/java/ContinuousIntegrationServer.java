@@ -6,17 +6,21 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.util.Properties;
+
 
 import javax.mail.Message;
 import javax.mail.Multipart;
@@ -27,8 +31,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import java.util.Properties;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
@@ -36,10 +38,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-// import org.eclipse.jetty.util.Callback;
 
 /**
  Skeleton of a ContinuousIntegrationServer which acts as webhook
@@ -61,7 +65,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
     //  *****  Linux  ******
     public final List<String> command = new ArrayList<>(Arrays.asList("bash", "-c", "mvn clean test > mavenOutput.txt"));
-
 
     // Directory to store cloned repositories and build summaries. It's located in the server.
     public final  String repoDir = "../build_history"; 
@@ -116,11 +119,20 @@ public class ContinuousIntegrationServer extends AbstractHandler
             listBuilds(response);
         } else if (target.startsWith("/builds/")) {
             showBuildDetails(target, response);
+        } else if (target.startsWith("/build-status/")) {
+            String repoName = target.substring("/build-status/".length());
+            if (repoName != null && !repoName.isEmpty()) {
+                getBuildStatus(repoName, response);
+            } else {
+                response.getWriter().println("Repository name is missing in the request URL.");
+            }
         } else {
             // Handle other requests or show default message
             response.getWriter().println("CI Server is running. Use /builds to list all builds.");
         }
-    }
+        
+        
+    }  
 
     /**
      * This function transforms a string in json format into a String,Object map.
@@ -308,6 +320,91 @@ public class ContinuousIntegrationServer extends AbstractHandler
         }   
     }
 
+    /**
+     * This function returns the build status for a specific repository.
+     * The build status is determined by checking the latest build directory for the repository.
+     * 
+     * @param repoName - The name of the repository
+     * @param response - The response object to write the JSON response
+     */
+    private void getBuildStatus(String repoName, HttpServletResponse response) throws IOException {
+        String status = "Unknown";
+        String color = "lightgrey";
+        int isBuildSuccessful = checkBuildStatusForRepo(repoName);
+
+        if (isBuildSuccessful==1) {
+            status = "Passing";
+            color = "brightgreen";
+        } else if (isBuildSuccessful==0) {
+            status = "Failing";
+            color = "red";
+        } else {
+            status = "Compiling";
+            color = "yellow";
+            
+        }
+               
+        String jsonResponse = String.format(
+            "{\"schemaVersion\": 1, \"label\": \"Build\", \"message\": \"%s\", \"color\": \"%s\"}",
+            status, color);
+
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_OK);
+        PrintWriter out = response.getWriter();
+        out.print(jsonResponse);
+        out.flush();
+    }
+    
+    /**
+     * This function checks the build status for a specific repository.
+     * It reads the build summary file in the latest build directory for the repository and returns the build status.
+     * 
+     * @param repoName - The name of the repository
+     * @return 1 if the build was successful, 0 if the build failed, -1 if the build status is unknown
+     */
+    private int checkBuildStatusForRepo(String repoName) {
+        File buildHistoryDir = new File("../build_history");
+        if (!buildHistoryDir.exists() || !buildHistoryDir.isDirectory()) {
+            System.err.println("Build history directory does not exist or is not a directory.");
+            return -1;
+        }
+    
+        File[] matchingDirs = buildHistoryDir.listFiles((dir, name) -> name.startsWith(repoName) && new File(dir, name).isDirectory());
+    
+        if (matchingDirs == null || matchingDirs.length == 0) {
+            System.out.println("No matching build directories found for repository: " + repoName);
+            return -1;
+        }
+    
+        Arrays.sort(matchingDirs, Comparator.comparingLong(File::lastModified).reversed());
+        File latestBuildDir = matchingDirs[0];
+        System.out.println("Latest build directory for " + repoName + ": " + latestBuildDir.getName());
+    
+        File buildSummaryFile = new File(latestBuildDir, "build_summary.json");
+        if (!buildSummaryFile.exists()) {
+            System.err.println("Build summary file does not exist in the latest build directory.");
+            return -1;
+        }
+    
+        try {
+            String content = new String(Files.readAllBytes(Paths.get(buildSummaryFile.getPath())));
+            JsonObject buildSummaryJson = JsonParser.parseString(content).getAsJsonObject();
+            String buildStatus = buildSummaryJson.has("buildStatus") ? buildSummaryJson.get("buildStatus").getAsString() : "";
+    
+            if ("SUCCESS".equals(buildStatus)){
+                return 1;
+            } else if ("FAILURE".equals(buildStatus)){
+                return 0;
+            } else {
+                return -1;
+            }
+        } catch (Exception e) {
+            System.err.println("Error reading or parsing build summary file: " + e.getMessage());
+            e.printStackTrace();
+            return -1;
+        }
+    }
+    
     /**
      * This function sends an email notification with the build result.
      * @param toEmail - The email address to send the notification to
@@ -553,7 +650,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
         String action = (String) payloadMap.get("action");
         System.out.println("Pull request action: " + action);
     }
-
 
     /**
      * This function lists all the builds in the repoDir directory.
