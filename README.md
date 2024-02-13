@@ -110,6 +110,11 @@ Note 2: If the domain is changed for any reason, make sure to update the url in 
 #### Kristian Fatohi (kfatohi)
 
 #### Max Israelsson (maxisr)
+* Implemented `compileMavenProject`, `generateSummaryFile`, `sendBuildResultEmail`, `extractEmail`, and `removeClonedRepository` with assistance from others.
+* I commented on some functions for JavaDoc.
+* Created tests for null payload with Johann and tests for compilation and test execution with Vlad and Johann.
+* Worked on README
+
 
 #### Vlad Dobre (dobre)
 
