@@ -2,6 +2,8 @@
 Repository for DD2480 Continuous Integration assignment - group 28.
 
 ## Description
+The link to get the builds history : https://081d-2001-6b0-1-1e30-250-56ff-feb6-5974.ngrok-free.app/
+
 
 ## Running the project locally
 In order to Run the project locally, you need to have the following installed:
