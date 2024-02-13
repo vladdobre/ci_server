@@ -47,7 +47,9 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 */
 public class ContinuousIntegrationServer extends AbstractHandler
 {
-    // [IMPORTANT]: Update the path to the mvn executable
+    // [IMPORTANT]: Update the path to the mvn executable 
+
+    // ******  Windows  ******
     // public final String[] mavenCommand = {
     //     "C:\\Program Files\\Maven\\apache-maven-3.9.6\\bin\\mvn.cmd",
     //     "clean",
@@ -55,14 +57,12 @@ public class ContinuousIntegrationServer extends AbstractHandler
     //     ">", 
     //     "mavenOutput.txt"
     // };
-    // Working in Ubuntu Linux
-    public final String[] mavenCommand = {
-        "mvn",
-        "clean",
-        "install",
-        ">", 
-        "mavenOutput.txt"
-    };
+    //public final List<String> command = Arrays.asList(mavenCommand);
+
+    //  *****  Linux  ******
+    public final List<String> command = new ArrayList<>(Arrays.asList("bash", "-c", "mvn clean install > mavenOutput.txt"));
+
+
     // Directory to store cloned repositories and build summaries. It's located in the server.
     public final  String repoDir = "../build_history"; 
      
@@ -204,11 +204,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
     public boolean compileMavenProject(String projectDirPath, String uniqueDirName, String payload){
         int exitCode = -1; // Default exit code for failure
         boolean buildSuccess = false;
-        try {
-            // Define the command to run mvn clean install
-            // [IMPORTANT]: Update the command to use the correct path to the mvn executable
-            List<String> command = Arrays.asList(mavenCommand);
-            
+        try {            
             // Create a process builder to execute the command in the project directory
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(new File(projectDirPath, uniqueDirName)); // Set the working directory
