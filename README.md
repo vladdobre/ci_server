@@ -34,6 +34,7 @@ ngrok http 8028
 7) The server should now be visible online and you can access it using the url provided by ngrok
 8) You can use the url to use the server as a webhook in Github 
 
+*Note*: To run the project, there is a variable in the Main class called "command" and "mavenCommand" that is used to build and compile the project. It depends on the operating system you are using. If you are using Windows, or Linux you have to select the right command. The default command is for Linux. If you are using Windows, you have to change the command by commenting the current command and uncommenting the other command.
 
 ## Running the project in the KTH server
 In order to run the project in the KTH server, you need to do the following steps:
