@@ -109,7 +109,10 @@ Note 2: If the domain is changed for any reason, make sure to update the url in 
 * Setup the server on the KTH server to make the ngrok domain visible online.
 * Ussing badge to show the build status in the README file. (which is the Group remarkable achivement)
 #### Johann Biörck (jbiorck)
-
+* Implemented `compileMavenProject`, `sendBuildResultEmail`, `extractEmail` with assistance from others.
+* Added some JavaDoc
+* Created tests for null payload with Max and tests for compilation and test execuction with Vlad and Johann, and did some bugfixing in the process.
+* Worked on README
 #### Kristian Fatohi (kfatohi)
 
 #### Max Israelsson (maxisr)
