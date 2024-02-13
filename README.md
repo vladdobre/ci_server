@@ -117,6 +117,9 @@ Note 2: If the domain is changed for any reason, make sure to update the url in 
 
 
 #### Vlad Dobre (dobre)
+* Helped implement webhook listener and payload translator from json to Map object
+* Helped implement tests for compilation and testing on the CI server
+* Wrote the Team assessment based on Essence
 
 ## Compilation
 
