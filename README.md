@@ -114,20 +114,24 @@ Note 2: If the domain is changed for any reason, make sure to update the url in 
 #### Vlad Dobre (dobre)
 
 ## Compilation
+
 ### Implementation
-
+Our implementation features a function named compileMavenProject responsible for executing the mvn clean install command and redirecting the output to mavenOutput.txt. Subsequently, we parse the contents of the mavenOutput.txt file to generate a build_summary.json file, presenting the Maven output in a structured JSON format.
 ### Unit-Tested
-
+To validate the functionality of our implementation, we've developed two distinct projects. The first project is intentionally crafted to compile successfully, while the second project is deliberately designed to fail compilation. Through unit tests, we thoroughly assess the behavior of our function across various project scenarios.
 ## Notification
-### Implementation
 
+### Implementation
+We have a function called extractEmail which extracts the commiters email adress from the payload and with the help of another function sendBuildResultEmail sends an email from an email adress we created to the commiter. For this to work it is required that the github user has their email settings as public. 
 ### Unit-Tested
+We united tested the email by writing tests, one called estExtractEmailWithNullPayload which simply feeds the function a null payload to check that the email is null in that case. The method is further tested in our compile tests which are fed an email adress in their dummy payload. 
 
 ## Test Execution
 ### Implementation
+For our implementation, we utilize the mvn clean install command, which not only compiles the project but also executes tests and packages the project artifacts.
 
 ### Unit-Tested
-
+In our unit tests, we created two distinct test cases: Test_Fail and Test_Success. Test_Fail represents a scenario where the test is expected to fail, while Test_Success represents a scenario where the test is expected to succeed.
 
 ## Team (Essence)
 We are currently completeing some of the items in the checklist for the Performing state. The team was Seeded during the course outline and when the assignment was presented. The team was Formed during our initial meeting when we spread out the work among our team members. We have fulfilled the criteria for the Collaborating state, but we need more time working as a team before we complete the checklist for the Performing state. This is because we need more time to see if we can consistently meet our commitments and adapt to the changing context of a project.
