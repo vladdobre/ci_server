@@ -114,7 +114,12 @@ Note 2: If the domain is changed for any reason, make sure to update the url in 
 * Added some JavaDoc
 * Created tests for null payload with Max and tests for compilation and test execuction with Vlad and Johann, and did some bugfixing in the process.
 * Worked on README
+
 #### Kristian Fatohi (kfatohi)
+* Implemented `compileMavenProject`, `sendBuildResultEmail`, `extractEmail` with assistance from others.
+* Created tests for `extractEmail`
+* Worked on README
+
 
 #### Max Israelsson (maxisr)
 * Implemented `compileMavenProject`, `generateSummaryFile`, `sendBuildResultEmail`, `extractEmail`, and `removeClonedRepository` with assistance from others.
