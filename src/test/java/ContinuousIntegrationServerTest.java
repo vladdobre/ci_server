@@ -157,6 +157,13 @@ public class ContinuousIntegrationServerTest {
     }
 
     @Test
+    /**
+     * Test the cloneRepository method
+     * 
+     * This test checks if the method clones a repository fails when the repository URL is invalid.
+     * 
+     * The expected output is an error message.
+     */
     public void testCloneRepositoryFailure() {
         ContinuousIntegrationServer ciServer = new ContinuousIntegrationServer();
         

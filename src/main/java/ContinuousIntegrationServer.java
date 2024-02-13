@@ -75,11 +75,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @param target - The target of the request
      * @param baseRequest - The original unwrapped request object
      * @param request - The request either as the Request object or a wrapper of that request
-     * @param response - The response as the Response object or a wrapper of that request
-     * @throws IOException - If an input or output exception occurs
-     * @throws ServletException - If a servlet exception occurs
-     * 
-     * @return void
+     * @param response - The response as the Response object or a wrapper of that request     * 
      */
     public void handle(String target,
                        Request baseRequest,
@@ -168,8 +164,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @param repoUrl the URL of the repository to clone.
      * @param baseCloneDirPath the base path to the directory where the repository will be cloned.
      * @param uniqueDirName the hash of the commit to clone.
-     * @return void
-     * @throws GitAPIException
      */
     public void cloneRepository(String repoUrl, String baseCloneDirPath, String uniqueDirName) {
         File cloneDir = new File(baseCloneDirPath, uniqueDirName);
@@ -197,9 +191,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @param projectDirPath the path to the directory where the Maven project is located.
      * @param uniqueDirName the unique directory name generated from the commit hash and the current time.
      * @param payload the JSON payload received from the webhook.
-     * @return void
-     * @throws IOException
-     * @throws InterruptedException
      */
     public boolean compileMavenProject(String projectDirPath, String uniqueDirName, String payload){
         int exitCode = -1; // Default exit code for failure
@@ -252,8 +243,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * 
      * @param projectDirPath the path to the directory where the Maven project is located.
      * @param uniqueDirName the unique directory name generated from the commit hash and the current time.
-     * @return void
-     * @throws IOException
      */
     private void generateSummaryFile(String projectDirPath, String uniqueDirName) {
         // Prepare summary data
@@ -319,8 +308,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * @param subject - The subject of the email
      * @param projectDirPath - The path to the directory where the Maven project is located
      * @param uniqueDirName - The unique directory name generated from the commit hash and the current time
-     * @return void
-     * @throws Exception
      */
     public void sendBuildResultEmail(String toEmail, String subject, String projectDirPath, String uniqueDirName) {
         final String fromEmail = "group28github@gmail.com"; //requires valid Gmail id
@@ -382,7 +369,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * 
      * @param cloneDirPath the path to the directory where the repository was cloned.
      * @param uniqueDirName the unique directory name generated from the commit hash and the current time.
-     * @return void
      */
     public void removeClonedRepository(String cloneDirPath, String uniqueDirName) {
         File clonedRepo = new File(cloneDirPath, uniqueDirName);
@@ -404,7 +390,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * This function is used to delete the cloned repository directory and its contents.
      * 
      * @param file the file or directory to delete.
-     * @return void
      */
     private void deleteFile(File file) {
         if (file.isDirectory()) {
@@ -424,7 +409,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * Extracts the email of the committer from the webhook payload.
      * @param payload - The JSON payload received from the webhook
      * @return The email of the committer
-     * @throws Exception
      */
     public String extractEmail(String payload) {
         try {
@@ -450,7 +434,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      *
      * @param payload the JSON payload received from the webhook.
      * @return the clone URL of the repository.
-     * @throws Exception
      */
     public String extractRepositoryUrl(String payload) {
         try {
@@ -471,7 +454,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * 
      * @param payload
      * @return the name of the repository
-     * @throws Exception 
      */
     public String extractRepositoryName(String payload) {
         try {
@@ -492,7 +474,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * 
      * @param payload
      * @return the name of the branch
-     * @throws Exception
      */
     public String extractBranchName(String payload) {
         try {
@@ -513,7 +494,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      *
      * @param payload the JSON payload received from the webhook.
      * @return the commit hash of the latest commit.
-     * @throws Exception
      */
     private String getLatestCommitHashFromPush(String payload) {
         try {
@@ -573,8 +553,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * This function lists all the builds in the repoDir directory.
      * 
      * @param response
-     * @return void
-     * @throws IOException
      */
     private void listBuilds(HttpServletResponse response) throws IOException {
         File buildDir = new File(repoDir); 
@@ -596,8 +574,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
      * 
      * @param target
      * @param response
-     * @return void
-     * @throws IOException
      */
     private void showBuildDetails(String target, HttpServletResponse response) throws IOException {
         String buildId = target.substring("/builds/".length()); // Extract the build ID from the URL
@@ -623,7 +599,6 @@ public class ContinuousIntegrationServer extends AbstractHandler
     /**
      * This function starts the CI server on port 8028.
      * @param args - Command line arguments
-     * @throws Exception 
      */
    public static void main(String[] args) throws Exception {
         Server server = new Server(8028);
