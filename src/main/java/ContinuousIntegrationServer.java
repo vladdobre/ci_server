@@ -60,7 +60,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
     //public final List<String> command = Arrays.asList(mavenCommand);
 
     //  *****  Linux  ******
-    public final List<String> command = new ArrayList<>(Arrays.asList("bash", "-c", "mvn clean install > mavenOutput.txt"));
+    public final List<String> command = new ArrayList<>(Arrays.asList("bash", "-c", "mvn clean test > mavenOutput.txt"));
 
 
     // Directory to store cloned repositories and build summaries. It's located in the server.
@@ -251,17 +251,19 @@ public class ContinuousIntegrationServer extends AbstractHandler
 
         // Read the Maven output file and extract relevant information
         String mavenOutputFile = projectDirPath + File.separator + uniqueDirName + File.separator + "mavenOutput.txt";
-        List<String> errorLines = new ArrayList<>();
-        List<String> infoLines = new ArrayList<>();
+        // List<String> errorLines = new ArrayList<>();
+        // List<String> infoLines = new ArrayList<>();
+        List<String> mavenlines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(mavenOutputFile))) {
             String line;
             boolean errorEncountered = false;
             while ((line = reader.readLine()) != null) {
+                // System.out.println("line : "+line);
                 if (line.contains("[ERROR]")) {
                     errorEncountered = true;
-                    errorLines.add(line);
+                    // errorLines.add(line);
                 } else if (line.contains("[INFO]")) {
-                    infoLines.add(line);
+                    // infoLines.add(line);
                 }
                 if (line.startsWith("[INFO] Total time:")) {
                     String[] parts = line.split(": ");
@@ -274,6 +276,7 @@ public class ContinuousIntegrationServer extends AbstractHandler
                     String finishedAt = line.substring("[INFO] Finished at:".length()).trim();
                     summary.put("finishedAt", finishedAt);
                 }
+                mavenlines.add(line);
             }
             // If errors were encountered, mark the summary as a failure
             if (errorEncountered) {
@@ -281,14 +284,17 @@ public class ContinuousIntegrationServer extends AbstractHandler
             } else {
                 summary.put("buildStatus", "SUCCESS");
             }
+
+
         } catch (IOException e) {
             System.err.println("Error reading Maven output file: " + e.getMessage());
             e.printStackTrace();
         }
 
-        // Add compilation errors and info lines to the summary
-        summary.put("errorLines", errorLines);
-        summary.put("infoLines", infoLines);
+        // Output
+        // summary.put("errorLines", errorLines);
+        // summary.put("infoLines", infoLines);
+        summary.put("mavenOutput", mavenlines);
 
         // Write summary to JSON file
         String summaryFile = projectDirPath + File.separator + uniqueDirName + File.separator + "build_summary.json";
