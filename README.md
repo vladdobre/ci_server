@@ -1,4 +1,4 @@
-TEst the szerver
+TEst the szerver 2
 # Assignment 2: Continuous Integration (DD2480)
 Repository for DD2480 Continuous Integration assignment - group 28.
 
