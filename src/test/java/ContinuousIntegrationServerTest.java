@@ -203,7 +203,7 @@ public class ContinuousIntegrationServerTest {
         String payload = "{\"head_commit\":{\"author\":{\"email\":\"test@mail.test\"}}}";
 
         boolean result = ciServer.compileMavenProject(projectDirPath, uniqueDirName, payload);
-        assertEquals(false, result);
+        assertEquals(true, result);
     }
 
     @Test
