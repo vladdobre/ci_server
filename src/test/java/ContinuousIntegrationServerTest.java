@@ -34,7 +34,7 @@ public class ContinuousIntegrationServerTest {
             + "]"
             + "}";
 
-        String expectedMessage = "Test commit message";
+        String expectedMessage = "Test commit messa";
         String actualMessage = ciServer.getLatestCommitMessageFromPush(mockPayload);
 
         assertEquals(expectedMessage, actualMessage, "The commit message should match the expected message.");
